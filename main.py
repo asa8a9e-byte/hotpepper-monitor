@@ -477,9 +477,8 @@ def main():
     print("-" * 60)
     print(f"新規店舗: {len(new_salons)}件")
     
-    # 通知送信（初回は送信しない）
-    if new_salons and not is_first_run:
-        # 新規店舗の電話番号を取得
+    # 新規店舗の電話番号を取得してスプシに追加
+    if new_salons:
         print("\n[電話番号取得中...]")
         for i, salon in enumerate(new_salons):
             print(f"  {i+1}/{len(new_salons)}: {salon['name'][:30]}...", end=" ")
@@ -488,20 +487,21 @@ def main():
             print(f"→ {phone if phone else 'なし'}")
             time.sleep(REQUEST_DELAY)
 
-        # スプレッドシートに追加
+        # スプレッドシートに追加（初回も含む）
         print("\n[スプレッドシート更新中...]")
         append_salons_to_sheet(new_salons)
 
-        # Chatwork通知
-        message = format_notification(new_salons)
-        print("\n[通知内容]")
-        print(message)
-        send_chatwork(message)
-    elif is_first_run:
-        # 初回実行完了通知
-        total = sum(len(s) for s in current_salons.values())
-        msg = f"[info][title]✅ 監視システム起動完了[/title]現在の掲載店舗数: {total}件\n次回以降、新規店舗を検出したら通知します。[/info]"
-        send_chatwork(msg)
+        # Chatwork通知（初回は送信しない）
+        if not is_first_run:
+            message = format_notification(new_salons)
+            print("\n[通知内容]")
+            print(message)
+            send_chatwork(message)
+        else:
+            # 初回実行完了通知
+            total = sum(len(s) for s in current_salons.values())
+            msg = f"[info][title]✅ 監視システム起動完了[/title]現在の掲載店舗数: {total}件\nスプレッドシートに全店舗を追加しました。\n次回以降、新規店舗を検出したら通知します。[/info]"
+            send_chatwork(msg)
     else:
         print("[INFO] 新規店舗なし")
     
